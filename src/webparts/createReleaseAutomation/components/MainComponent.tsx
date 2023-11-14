@@ -246,8 +246,38 @@ const MainComponent = (props) => {
         // Create subsite using the REST API
         await sp.web.webs
           .add(subsiteTitle, subsiteUrl, subsiteDescription, WebTemplate)
-          .then((res) => {
-            createSitePages();
+          .then(async (res) => {
+            // createSitePages();
+
+            const xweb = props.context.pageContext.web.absoluteUrl;
+            console.log(xweb, "siteurl");
+            const xxweb = Web(xweb);
+            const result = await xxweb.addClientsidePage(value, "Article");
+
+            await result
+              .save()
+              .then(async (res) => {
+                const xweb1 = props.context.pageContext.web.absoluteUrl;
+                const subpage =
+                  props.context.pageContext.web.absoluteUrl +
+                  "/" +
+                  "SitePages" +
+                  "/" +
+                  value +
+                  "." +
+                  "aspx";
+                console.log(xweb1, "siteurl");
+                const xxweb = Web(xweb1);
+
+                await xxweb.navigation.quicklaunch
+
+                  .add(value, subpage, true)
+                  .then((res) => {
+                    createSitePages();
+                  })
+                  .catch((err) => console.log(err));
+              })
+              .catch((err) => console.log(err));
           })
           .catch((err) => console.log(err));
 
@@ -660,6 +690,8 @@ const MainComponent = (props) => {
                       // console.log("subchild > ", subchild);
                     })
                     .catch((errsubchild: any) => {
+                      setIsLoader(false);
+
                       console.log("errsubchild > ", errsubchild);
                     });
 
@@ -672,6 +704,8 @@ const MainComponent = (props) => {
                 }
               })
               .catch((errChild: any) => {
+                setIsLoader(false);
+
                 console.log("errChild > ", errChild);
               });
 
@@ -682,6 +716,7 @@ const MainComponent = (props) => {
         })
         .catch((err: any) => {
           console.log("err > ", err);
+          setIsLoader(false);
         });
 
       if (navigationItems.length === i + 1) {
