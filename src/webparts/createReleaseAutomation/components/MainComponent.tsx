@@ -13,6 +13,7 @@ import Loader from "./Loader";
 const MainComponent = (props) => {
   const [value, setValue] = React.useState("");
   const [isLoader, setIsLoader] = React.useState<boolean>(false);
+  const [Data, setData] = React.useState([]);
 
   //   const subsiteCreationInfo: WebCreationInformation = {
   //     Title: "Subsite Title",
@@ -221,7 +222,7 @@ const MainComponent = (props) => {
       PageType: "Article",
       PageTitle: "Error Codes and Disposition codes",
     },
-    { Title: "FAQs    ", PageType: "Article", PageTitle: "FAQs" },
+    { Title: "FAQs", PageType: "Article", PageTitle: "FAQs" },
     {
       Title: "Common Epic APIs",
       PageType: "Article",
@@ -230,13 +231,14 @@ const MainComponent = (props) => {
   ];
 
   const SubsiteCreate = async () => {
+    setData([...Data, value]);
     // Replace these values with your actual site URL and subsite details
     let x = "https://chandrudemo.sharepoint.com/sites/CreateReleaseAutomation";
     const siteUrl = props.context.pageContext.web.absoluteUrl;
     const subsiteUrl = value;
     const subsiteTitle = value;
     const subsiteDescription = "Description for the new subsite";
-    const WebTemplate = "STS#0";
+    const WebTemplate = "STS#3";
     if (value.trim() != "") {
       try {
         const web = Web(siteUrl);
@@ -249,7 +251,7 @@ const MainComponent = (props) => {
           })
           .catch((err) => console.log(err));
 
-        console.log("Subsite created successfully.");
+        // console.log("Subsite created successfully.");
       } catch (error) {
         console.error("Error creating subsite:", error);
       }
@@ -266,7 +268,6 @@ const MainComponent = (props) => {
     const xxweb = Web(xweb);
 
     for (let i: number = 0; sitePages.length > i; i++) {
-      debugger;
       const result = await xxweb.addClientsidePage(
         sitePages[i].Title,
         sitePages[i].PageTitle,
@@ -628,7 +629,7 @@ const MainComponent = (props) => {
 
         .add(navigationItems[i].title, navigationItems[i].url, true)
         .then(async (res: any) => {
-          console.log("Master Id > ", res.data.Id);
+          // console.log("Master Id > ", res.data.Id);
 
           for (let j: number = 0; navigationItems[i].children.length > j; j++) {
             // await sp.web.navigation.quicklaunch
@@ -640,7 +641,7 @@ const MainComponent = (props) => {
                 true
               )
               .then(async (child: any) => {
-                console.log("child > ", child);
+                // console.log("child > ", child);
 
                 for (
                   let k: number = 0;
@@ -656,7 +657,7 @@ const MainComponent = (props) => {
                       true
                     )
                     .then((subchild: any) => {
-                      console.log("subchild > ", subchild);
+                      // console.log("subchild > ", subchild);
                     })
                     .catch((errsubchild: any) => {
                       console.log("errsubchild > ", errsubchild);
@@ -694,24 +695,40 @@ const MainComponent = (props) => {
       {isLoader ? (
         <Loader />
       ) : (
-        <div style={{ display: "flex", alignItems: "end", gap: "10px" }}>
-          <TextField
-            styles={{
-              root: {
-                width: "90%",
-              },
-            }}
-            label="Subsite Name"
-            onChange={(e, val) => setValue(val)}
-          ></TextField>
-          <DefaultButton
-            text="Click"
-            onClick={(_) => {
-              setIsLoader(true);
-              !isLoader && SubsiteCreate();
-            }}
-          />
-        </div>
+        <>
+          <div style={{ display: "flex", alignItems: "end", gap: "10px" }}>
+            <TextField
+              styles={{
+                root: {
+                  width: "90%",
+                },
+              }}
+              label="Subsite Name"
+              onChange={(e, val) => setValue(val)}
+            ></TextField>
+            <DefaultButton
+              text="Submit"
+              onClick={(_) => {
+                setIsLoader(true);
+                !isLoader && SubsiteCreate();
+              }}
+            />
+          </div>
+
+          <div style={{ margin: "50px 0px" }}>
+            {Data.length > 0 &&
+              Data.map((val1, i) => {
+                return (
+                  <div>
+                    <a
+                      href={`${pageurl}/${val1}`}
+                      style={{ cursor: "pointer" }}
+                    >{`${i + 1}.${val1} `}</a>
+                  </div>
+                );
+              })}
+          </div>
+        </>
       )}
     </>
   );

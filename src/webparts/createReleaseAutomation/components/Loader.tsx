@@ -10,6 +10,9 @@ const Loader = () => {
         <span></span>
         <span></span>
       </div>
+      <p style={{ margin: 0 }}>
+        It may take some time; please do not refresh the page!
+      </p>
     </div>
   );
 };
