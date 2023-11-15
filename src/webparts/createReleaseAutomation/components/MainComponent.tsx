@@ -14,7 +14,8 @@ const MainComponent = (props) => {
   const [value, setValue] = React.useState("");
   const [isLoader, setIsLoader] = React.useState<boolean>(false);
   const [Data, setData] = React.useState([]);
-
+  const [masterData, setMasterData] = React.useState([]);
+  const [error, setError] = React.useState("");
   //   const subsiteCreationInfo: WebCreationInformation = {
   //     Title: "Subsite Title",
   //     Url: "subsite-url",
@@ -250,7 +251,7 @@ const MainComponent = (props) => {
             // createSitePages();
 
             const xweb = props.context.pageContext.web.absoluteUrl;
-            console.log(xweb, "siteurl");
+            // console.log(xweb, "siteurl");
             const xxweb = Web(xweb);
             const result = await xxweb.addClientsidePage(value, "Article");
 
@@ -260,13 +261,14 @@ const MainComponent = (props) => {
                 const xweb1 = props.context.pageContext.web.absoluteUrl;
                 const subpage =
                   props.context.pageContext.web.absoluteUrl +
+                  // "/" +
+                  // "SitePages" +
                   "/" +
-                  "SitePages" +
-                  "/" +
-                  value +
-                  "." +
-                  "aspx";
-                console.log(xweb1, "siteurl");
+                  value;
+
+                // "." +
+                // "aspx";
+                // console.log(xweb1, "siteurl");
                 const xxweb = Web(xweb1);
 
                 await xxweb.navigation.quicklaunch
@@ -275,14 +277,22 @@ const MainComponent = (props) => {
                   .then((res) => {
                     createSitePages();
                   })
-                  .catch((err) => console.log(err));
+                  .catch((err) => {
+                    setIsLoader(false);
+                  });
               })
-              .catch((err) => console.log(err));
+              .catch((err) => {
+                setIsLoader(false);
+              });
           })
-          .catch((err) => console.log(err));
+          .catch((err) => {
+            setIsLoader(false);
+          });
 
         // console.log("Subsite created successfully.");
       } catch (error) {
+        setIsLoader(false);
+
         console.error("Error creating subsite:", error);
       }
     } else {
@@ -294,7 +304,7 @@ const MainComponent = (props) => {
   //site page
   const createSitePages = async () => {
     const xweb = props.context.pageContext.web.absoluteUrl + "/" + value;
-    console.log(xweb, "siteurl");
+    // console.log(xweb, "siteurl");
     const xxweb = Web(xweb);
 
     for (let i: number = 0; sitePages.length > i; i++) {
@@ -307,13 +317,14 @@ const MainComponent = (props) => {
       await result
         .save()
         .then((_res) => {
-          console.log("siteres", _res);
+          // console.log("siteres", _res);
 
           if (sitePages.length === i + 1) {
             createNavigationTree();
           }
         })
         .catch((err: any) => {
+          setIsLoader(false);
           console.log("err > ", err);
         });
     }
@@ -651,7 +662,7 @@ const MainComponent = (props) => {
   ];
   const createNavigationTree = async () => {
     const xweb1 = props.context.pageContext.web.absoluteUrl + "/" + value;
-    console.log(xweb1, "siteurl");
+    // console.log(xweb1, "siteurl");
     const xxweb = Web(xweb1);
     for (let i: number = 0; navigationItems.length > i; i++) {
       //   await sp.web.navigation.quicklaunch
@@ -724,9 +735,28 @@ const MainComponent = (props) => {
       }
     }
   };
-
+  const getSubsiteName = () => {
+    sp.web.webs
+      .select("Title", "Url", "Description")
+      .get()
+      .then((res) => {
+        let Titlearray = [];
+        res.forEach((val) => {
+          Titlearray.push(val.Title);
+        });
+        // console.log(Titlearray);
+        setMasterData([...Titlearray]);
+      })
+      .catch((err) => {
+        setIsLoader(false);
+        console.log(err);
+      });
+  };
+  React.useEffect(() => {
+    getSubsiteName();
+  }, []);
   return (
-    <>
+    <div>
       {isLoader ? (
         <Loader />
       ) : (
@@ -738,17 +768,45 @@ const MainComponent = (props) => {
                   width: "90%",
                 },
               }}
+              // errorMessage={error ? error : ""}
               label="Subsite Name"
-              onChange={(e, val) => setValue(val)}
+              onChange={(e, val) => {
+                const titleExists = masterData.some((item) => {
+                  return item.toLowerCase().trim() === val.toLowerCase().trim();
+                });
+                if (val.trim() === "") {
+                  setError("This is required");
+                } else if (titleExists) {
+                  setError("This value already exists");
+                  // alert("this value already exist !");
+                } else {
+                  setError("");
+                }
+
+                setValue(val);
+              }}
             ></TextField>
             <DefaultButton
               text="Submit"
+              disabled={error ? true : false}
               onClick={(_) => {
                 setIsLoader(true);
                 !isLoader && SubsiteCreate();
               }}
             />
           </div>
+          {error && (
+            <p
+              style={{
+                margin: 0,
+                color: "#c00909",
+                fontSize: "14px",
+                fontWeight: 400,
+              }}
+            >
+              {error}
+            </p>
+          )}
 
           <div style={{ margin: "50px 0px" }}>
             {Data.length > 0 &&
@@ -765,7 +823,7 @@ const MainComponent = (props) => {
           </div>
         </>
       )}
-    </>
+    </div>
   );
 };
 export default MainComponent;
